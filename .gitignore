@@ -1,0 +1,33 @@
+
+# Node.js dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage/
+frontend/build/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Python/venv
+venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.env
+backend/.env.*
+
+# Audio/model outputs
+backend/output.wav
+backend/pipeline_audio_output/
+backend/realtime_audio_output/
+backend/models/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*

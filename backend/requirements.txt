@@ -1,0 +1,18 @@
+fastapi
+uvicorn[standard]
+openai-whisper
+torch
+vosk
+numpy
+python-multipart  # For file uploads
+scipy  
+
+soundfile           # For saving .wav files
+
+# Web framework and server
+chatterbox-tts
+websockets
+litellm
+TTS
+# Utilities
+ 
