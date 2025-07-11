@@ -10,12 +10,14 @@ const App = () => {
     const [llmResponse, setLlmResponse] = useState('');
     const [audioUrl, setAudioUrl] = useState(null);
     const [processingStatus, setProcessingStatus] = useState('');
+    const [speechDetected, setSpeechDetected] = useState(false); // New state for speech detection
 
     // Refs
     const socketRef = useRef(null);
     const mediaStreamRef = useRef(null);
     const processorRef = useRef(null);
     const audioContextRef = useRef(null);
+    const audioRef = useRef(null); // Add a ref for the audio element
 
     // WebSocket connection
     const connectWebSocket = () => {
@@ -59,6 +61,7 @@ const App = () => {
                 break;
 
             case 'speech_start':
+                setSpeechDetected(true);
                 setSpeechStatus('🎤 Speech detected!');
                 setTranscript('Listening...');
                 break;
@@ -68,6 +71,7 @@ const App = () => {
                 break;
 
             case 'speech_end':
+                setSpeechDetected(false);
                 setSpeechStatus('🛑 Speech ended, processing...');
                 break;
 
@@ -85,6 +89,13 @@ const App = () => {
                     const audioBlob = base64ToBlob(data.tts, 'audio/wav');
                     const url = URL.createObjectURL(audioBlob);
                     setAudioUrl(url);
+
+                    // Play audio automatically
+                    setTimeout(() => {
+                        if (audioRef.current) {
+                            audioRef.current.play().catch(e => console.log('Audio play error:', e));
+                        }
+                    }, 100); // slight delay to ensure src is set
                 }
                 break;
 
@@ -188,68 +199,61 @@ const App = () => {
 
     return (
         <div className="App">
-            <header className="App-header">
-                <h1>Real-time Audio Chat</h1>
-                {/* Connection Status */}
-                <div className={`status-indicator ${connectionStatus.includes('Connected') ? 'connected' : 'disconnected'}`}>
-                    WebSocket: {connectionStatus}
-                </div>
-                {/* Main Control */}
-                <div className="control-section">
-                    {!isListening ? (
-                        <button 
-                            onClick={startListening} 
-                            className="control-button start"
-                            disabled={!connectionStatus.includes('Connected')}
-                        >
-                            Start Listening
-                        </button>
-                    ) : (
-                        <button 
-                            onClick={stopListening} 
-                            className="control-button stop"
-                        >
-                            Stop Listening
-                        </button>
-                    )}
-                </div>
-                {/* Status Indicators */}
-                {speechStatus && (
-                    <div className="status-message speech">
-                        {speechStatus}
-                    </div>
-                )}
-                {processingStatus && (
-                    <div className="status-message processing">
-                        {processingStatus}
-                    </div>
-                )}
-                {/* Results Display */}
-                <div className="results-container">
-                    <div className="result-section">
-                        <h3 className="section-title">You said</h3>
-                        <div className="result-text">
+            <header className="App-header custom-chat-header">
+                <h1 className="main-title">CONVERSATIONAL AI</h1>
+                <div className="chat-container">
+                    <div className="chat-section user-section">
+                        <div className="chat-label">you said</div>
+                        <div className="chat-bubble user-bubble small-bubble">
                             {transcript && transcript !== 'Listening...'
                                 ? transcript
                                 : (isListening ? 'Listening...' : 'No speech detected')}
                         </div>
                     </div>
-                    <div className="result-section">
-                        <h3 className="section-title">AI Response</h3>
-                        <div className="result-text">
-                            {llmResponse || 'Waiting for response...'}
+                    {/* Floating speech indicator */}
+                    {speechDetected && (
+                        <div className="speech-floating-indicator">
+                            <span className="dot"></span>
+                        </div>
+                    )}
+                    <div className="chat-section ai-section">
+                        <div className="chat-label ai-label">AI assistant's Reply</div>
+                        <div className="chat-bubble ai-bubble">
+                            {processingStatus ? (
+                                <span className="ai-typing">
+                                    <span className="dot"></span>
+                                    <span className="dot"></span>
+                                    <span className="dot"></span>
+                                </span>
+                            ) : (
+                                llmResponse || 'Waiting for response...'
+                            )}
                         </div>
                     </div>
-                    <div className="result-section">
-                        <h3 className="section-title">Audio Response</h3>
-                        {audioUrl ? (
-                            <audio controls autoPlay src={audioUrl}>
-                                Your browser does not support audio playback.
-                            </audio>
-                        ) : (
-                            <div className="result-text">No audio yet...</div>
+                    <div className="audio-section">
+                        {audioUrl && (
+                            <audio ref={audioRef} src={audioUrl} />
+                        )}
+                        {processingStatus && (
+                            <span className="ai-speaking-animation">
+                                <span className="dot"></span>
+                                <span className="dot"></span>
+                                <span className="dot"></span>
+                            </span>
                         )}
                     </div>
+                </div>
+                <div className="controls-bar">
+                    <button 
+                        onClick={isListening ? stopListening : startListening}
+                        className={`control-button ${isListening ? 'stop' : 'start'}`}
+                        disabled={!connectionStatus.includes('Connected') && !isListening}
+                    >
+                        {isListening ? 'Stop Listening' : 'Start Listening'}
+                    </button>
+                    <span className={`status-indicator ${connectionStatus.includes('Connected') ? 'connected' : 'disconnected'}`}>
+                        {connectionStatus.includes('Connected') ? `WebSocket: ${connectionStatus}` : 'WebSocket: Disconnected'}
+                    </span>
                 </div>
             </header>
         </div>

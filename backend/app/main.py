@@ -17,8 +17,8 @@ from .services.llm_service import Agent
 CONFIG = {
     "SAMPLE_RATE": 16000,
     "WHISPER_MODEL_NAME": "tiny.en",
-    "SILENCE_THRESHOLD_RMS": 0.01,
-    "VAD_PADDING_MS": 700,
+    "SILENCE_THRESHOLD_RMS": 0.04,
+    "VAD_PADDING_MS": 1600,
     "MIN_SPEECH_DURATION_MS": 300,
     "OUTPUT_DIR": "realtime_audio_output",
     "LLM_MODEL": "gemini/gemini-2.0-flash"
@@ -49,9 +49,11 @@ def load_models():
         name="Chat Assistant",
         model=CONFIG["LLM_MODEL"],
         tools=[],
-        system_prompt="""You are a helpful assistant. Keep responses very concise and friendly. 
+        system_prompt=""" You are a helpful assistant. Keep responses very concise and friendly. 
     IMPORTANT: Use only plain text without any formatting like asterisks, bullets, or special characters. 
-    Avoid markdown formatting. Speak naturally as if in conversation. Keep responses under 50 words.""",
+    Avoid markdown formatting. Never use phonetic symbols, IPA, or any pronunciation guides. 
+    Only use plain English words.
+    Keep responses under 50 words.""",
     to_break=None,
        
     )
