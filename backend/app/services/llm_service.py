@@ -184,20 +184,27 @@ class Agent:
         # ...existing Agent class code...
         pass  # Replace with your full Agent class definition
 
+# Session-based agent store
+agent_store = {}
+
+def get_agent(session_id):
+    return agent_store.get(session_id)
+
+def set_agent(session_id, agent):
+    agent_store[session_id] = agent
+
+def remove_agent(session_id):
+    agent_store.pop(session_id, None)
+
 def process_llm(agent, text_input: str) -> str:
     """
     Calls the Gemini LLM using the provided Agent instance.
     Pass transcribed text and get LLM output.
     """
+    agent.process_llm(text_input)
     response = agent.invoke(text_input)
     return response
 
-global_agent = None
 
-def set_global_agent(agent):
-    global global_agent
-    global_agent = agent
-
-def get_global_agent():
-    return global_agent
+   
 

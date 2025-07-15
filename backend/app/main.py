@@ -11,14 +11,14 @@ from typing import Dict
 
 from .services import llm_service, tts_service
 from .services.stt_service import EnhancedVADAudioProcessor  # ✅ Fixed import
-from .services.llm_service import Agent
+from .services.llm_service import Agent, set_agent, get_agent, remove_agent
 
 # ADD THIS SECTION - FastAPI App Instance and Configuration
 CONFIG = {
     "SAMPLE_RATE": 16000,
     "WHISPER_MODEL_NAME": "tiny.en",
     "SILENCE_THRESHOLD_RMS": 0.04,
-    "VAD_PADDING_MS": 1600,
+    "VAD_PADDING_MS": 2100,
     "MIN_SPEECH_DURATION_MS": 300,
     "OUTPUT_DIR": "realtime_audio_output",
     "LLM_MODEL": "gemini/gemini-2.0-flash"
@@ -45,19 +45,6 @@ def load_models():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     app.state.whisper_model = whisper.load_model(CONFIG["WHISPER_MODEL_NAME"], device=device)
     
-    app.state.llm_agent = Agent(
-        name="Chat Assistant",
-        model=CONFIG["LLM_MODEL"],
-        tools=[],
-        system_prompt=""" You are a helpful assistant. Keep responses very concise and friendly. 
-    IMPORTANT: Use only plain text without any formatting like asterisks, bullets, or special characters. 
-    Avoid markdown formatting. Never use phonetic symbols, IPA, or any pronunciation guides. 
-    Only use plain English words.
-    Keep responses under 50 words.""",
-    to_break=None,
-       
-    )
-    llm_service.set_global_agent(app.state.llm_agent)
     
     os.makedirs(CONFIG["OUTPUT_DIR"], exist_ok=True)
     print("✅ Server ready")
@@ -73,6 +60,20 @@ async def websocket_endpoint(websocket: WebSocket):
     
     session_id = f"session-{len(clients)}"
     
+    # Create and store a new Agent for this session
+    agent = Agent(
+        name="Chat Assistant",
+        model=CONFIG["LLM_MODEL"],
+        tools=[],
+        system_prompt=""" You are a helpful assistant. Keep responses very concise and friendly. 
+IMPORTANT: Use only plain text without any formatting like asterisks, bullets, or special characters. 
+Avoid markdown formatting. Never use phonetic symbols, IPA, or any pronunciation guides. 
+Only use plain English words.
+Keep responses under 50 words.""",
+        to_break=None,
+    )
+    set_agent(session_id, agent)
+
     # Initialize VAD processor
     processor = EnhancedVADAudioProcessor(
         config=CONFIG, 
@@ -111,7 +112,7 @@ async def websocket_endpoint(websocket: WebSocket):
     finally:
         if websocket in clients:
             del clients[websocket]
-            print(f"Client {session_id} disconnected")
+        remove_agent(session_id)  # Clean up agent when session ends
 
 # ADD ROOT ENDPOINT (OPTIONAL)
 @app.get("/")

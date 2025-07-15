@@ -149,8 +149,8 @@ class EnhancedVADAudioProcessor:
 
             # 4. Get LLM response (runs in threadpool)
             def process_llm():
-                from .llm_service import get_global_agent, process_llm
-                agent = get_global_agent()
+                from .llm_service import get_agent, process_llm
+                agent = get_agent(self.session_id)
                 return process_llm(agent, transcribed_text)
             llm_response = await run_in_threadpool(process_llm)
 
