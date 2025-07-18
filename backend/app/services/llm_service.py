@@ -104,9 +104,11 @@ class Agent:
         @param tool_call The tool call from the LLM response.
         @return The final response from the LLM after executing the tool.
         """
+        # Extracting the function name and arguments from the tool call.
         function_name = tool_call.function.name
         func = next(
             iter([func for func in self.tools if func.__name__ == function_name])
+            #finding the matching function name in the tools list
         )
 
         if not func:
@@ -116,7 +118,7 @@ class Agent:
             print(Fore.GREEN + f"\nCalling Tool: {function_name}")
             print(Fore.GREEN + f"Arguments: {tool_call.function.arguments}")
             # init tool
-            func = func(**eval(tool_call.function.arguments))
+            func = func(**eval(tool_call.function.arguments))#used to convert string to dict
             # get outputs from the tool
             output = func.run()
             
@@ -181,8 +183,7 @@ class Agent:
             }
             parsed_calls.append(parsed_call)
         return parsed_calls
-        # ...existing Agent class code...
-        pass  # Replace with your full Agent class definition
+        
 
 # Session-based agent store
 agent_store = {}
@@ -201,7 +202,7 @@ def process_llm(agent, text_input: str) -> str:
     Calls the Gemini LLM using the provided Agent instance.
     Pass transcribed text and get LLM output.
     """
-    agent.process_llm(text_input)
+   #gent.process_llm(text_input)
     response = agent.invoke(text_input)
     return response
 

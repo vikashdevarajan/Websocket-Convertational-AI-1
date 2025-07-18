@@ -12,7 +12,10 @@ from typing import Dict
 from .services import llm_service, tts_service
 from .services.stt_service import EnhancedVADAudioProcessor  # ✅ Fixed import
 from .services.llm_service import Agent, set_agent, get_agent, remove_agent
+from .services.tools.get_weather import get_weather  # ✅ Fixed import
 
+
+Tool_list=[get_weather]
 # ADD THIS SECTION - FastAPI App Instance and Configuration
 CONFIG = {
     "SAMPLE_RATE": 16000,
@@ -64,12 +67,18 @@ async def websocket_endpoint(websocket: WebSocket):
     agent = Agent(
         name="Chat Assistant",
         model=CONFIG["LLM_MODEL"],
-        tools=[],
+        tools=Tool_list,  # Pass your tools here
         system_prompt=""" You are a helpful assistant. Keep responses very concise and friendly. 
 IMPORTANT: Use only plain text without any formatting like asterisks, bullets, or special characters. 
 Avoid markdown formatting. Never use phonetic symbols, IPA, or any pronunciation guides. 
 Only use plain English words.
-Keep responses under 50 words.""",
+Keep responses under 50 words.
+
+TOOLS:
+1. WeatherTool: Retrieves the current weather for a specified location.
+    - Usage: get_weather(location)
+    - Param - location (string): The city name for which you want the weather.
+    - The tool returns the current temperature and wind speed for the given location.""",
         to_break=None,
     )
     set_agent(session_id, agent)
